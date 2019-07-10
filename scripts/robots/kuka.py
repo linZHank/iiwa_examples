@@ -14,7 +14,7 @@ class KukaRobot(object):
     """
     def __init__(self):
         rospy.init_node("kuka_robot", anonymous=True, log_level=rospy.INFO)
-        self.rate = rospy.Rate(30)
+        self.rate = rospy.Rate(10)
         self.cartesian_pose = Pose()
         self.joint_position = JointPosition()
         self.goal_joint = JointPosition()
@@ -34,14 +34,14 @@ class KukaRobot(object):
     def set_goal_joint(self, joint_position):
         self.goal_joint = joint_position
 
-    def move_joint(self, joint_position, cycle=10):
+    def move_joint(self, joint_position, cycle=5):
         assert joint_position._type == 'iiwa_msgs/JointPosition'
         for i in range(cycle):
             self.joint_pos_pub.publish(joint_position)
             self.rate.sleep()
         rospy.logdebug("robot toward: {}".format(joint_position))
 
-    def move_cartesian(self, cartesian_pose, cycle=10):
+    def move_cartesian(self, cartesian_pose, cycle=5):
         assert cartesian_pose._type == 'geometry_msgs/PoseStamped'
         for i in range(cycle):
             self.carte_pos_pub.publish(cartesian_pose)

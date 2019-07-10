@@ -22,7 +22,7 @@ if __name__=='__main__':
     iiwa = kuka.KukaRobot()
     # move iiwa to zeros pose
     joint_zeros = JointPosition()
-    iiwa.move_joint(joint_position=joint_zeros, cycle=150)
+    iiwa.move_joint(joint_position=joint_zeros, cycle=50)
     print(bcolors.OKGREEN, "iiwa moved to zeros pose")
     # set iiwa to ready pose
     joint_ready = JointPosition()
@@ -31,8 +31,8 @@ if __name__=='__main__':
     joint_ready.position.a4 = -np.pi/3
     joint_ready.position.a5 = np.pi/4
     joint_ready.position.a6 = np.pi/3
-    joint_ready.position.a7 = np.pi/4
-    iiwa.move_joint(joint_position=joint_ready, cycle=150)
+    joint_ready.position.a7 = np.pi/12
+    iiwa.move_joint(joint_position=joint_ready, cycle=50)
     print("iiwa moved to ready pose", bcolors.ENDC)
     # set cartesian baseline (cartesian: baseline==joint: ready)
     baseline = PoseStamped()
@@ -46,12 +46,18 @@ if __name__=='__main__':
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25) # resize to (640x480)/4
         rgb_small_frame = small_frame[:, :, ::-1] # convert opencv's BGR to face_recognition's RGB
         face_locations = face_recognition.face_locations(rgb_small_frame) # locate face
-        face_location = face_locations[0] # always lock the face with index: 0
-        top, right, bottom, left = face_location
-        top *=4
-        right*=4
-        bottom*=4
-        left*=4
+        if not face_locations:
+            top = 240
+            right = 320
+            bottom = 240
+            left = 320
+        else:
+            face_location = face_locations[0] # always lock the face with index: 0
+            top, right, bottom, left = face_location
+            top *=4
+            right*=4
+            bottom*=4
+            left*=4
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2) # draw bounding box
         face_offset = [320-int((right+left)/2), 240-int((top+bottom)/2)] # [dy, dz]
         rospy.loginfo("face location: {} \nface offset: {}".format((top, right, bottom, left), face_offset))
