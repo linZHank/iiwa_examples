@@ -13,7 +13,7 @@ class KukaRobot(object):
     Kuka robot class
     """
     def __init__(self):
-        rospy.init_node("kuka_robot", anonymous=True, log_level=rospy.DEBUG)
+        rospy.init_node("kuka_robot", anonymous=True, log_level=rospy.INFO)
         self.rate = rospy.Rate(30)
         self.cartesian_pose = Pose()
         self.joint_position = JointPosition()
@@ -26,19 +26,33 @@ class KukaRobot(object):
         rospy.Subscriber('iiwa/state/CartesianPose', CartesianPose, self._carte_pose_callback)
         rospy.Subscriber('iiwa/state/JointPosition', JointPosition, self._joint_position_callback)
 
-    def move_to_goal(self, cycle=10, mode='joint'):
+        super(KukaRobot, self).__init__()
+
+    def set_goal_cartesian(self, cartesian_pose):
+        self.goal_cartesion = cartesian_pose
+
+    def set_goal_joint(self, joint_position):
+        self.goal_joint = joint_position
+
+    def move_joint(self, joint_position, cycle=10):
+        assert joint_position._type == 'iiwa_msgs/JointPosition'
         for i in range(cycle):
-            if mode == 'joint':
-                self.joint_pos_pub.publish(self.goal_joint)
-                self.rate.sleep()
-            elif mode == 'cartesion':
-                self.carte_pos_pub.publish(self.goal_cartesion)
-                self.rate.sleep()
-            else:
-                raise Exception("robot control mode invalid")
+            self.joint_pos_pub.publish(joint_position)
+            self.rate.sleep()
+        rospy.logdebug("robot toward: {}".format(joint_position))
 
-        rospy.logdebug("robot moved")
+    def move_cartesian(self, cartesian_pose, cycle=10):
+        assert cartesian_pose._type == 'geometry_msgs/PoseStamped'
+        for i in range(cycle):
+            self.carte_pos_pub.publish(cartesian_pose)
+            self.rate.sleep()
+        rospy.logdebug("robot toward: {}".format(cartesian_pose))
 
+    def get_joint_position(self):
+        return self.joint_position
+
+    def get_cartesian_pose(self):
+        return self.cartesian_pose
 
     def _joint_position_callback(self, data):
         self.joint_position = data.position
